@@ -4,7 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.GameRenderer;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 import org.lwjgl.opengl.GL15;
@@ -147,13 +146,6 @@ public final class ShaderRenderUtil {
         RenderSystem.clearShader();
         if (previousShader != null) {
             RenderSystem.setShader(previousShader);
-        } else {
-            ShaderProgram fallback = GameRenderer.getPositionColorProgram();
-            if (fallback != null) {
-                RenderSystem.setShader(fallback);
-            } else {
-                RenderSystem.clearShader();
-            }
         }
         RenderSystem.enableCull();
         RenderSystem.disableBlend();
