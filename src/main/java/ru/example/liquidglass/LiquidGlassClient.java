@@ -7,7 +7,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
-import ru.example.liquidglass.hud.ArmorHud;
+import ru.example.liquidglass.hud.VisualHud;
 import ru.example.liquidglass.render.ShaderRenderUtil;
 import ru.example.liquidglass.screen.ClickGuiScreen;
 
@@ -31,6 +31,6 @@ public final class LiquidGlassClient implements ClientModInitializer {
             }
         });
 
-        HudRenderCallback.EVENT.register(ArmorHud::render);
+        HudRenderCallback.EVENT.register(VisualHud::render);
     }
 }
