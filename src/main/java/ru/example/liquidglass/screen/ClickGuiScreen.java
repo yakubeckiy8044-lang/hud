@@ -5,28 +5,27 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import ru.example.liquidglass.ClientConfig;
-import ru.example.liquidglass.hud.HudModuleState;
 import ru.example.liquidglass.render.ShaderRenderUtil;
 
 import java.util.List;
 
 public final class ClickGuiScreen extends Screen {
-    private static final int COLUMN_WIDTH = 150;
+    private static final int COLUMN_WIDTH = 154;
     private static final int COLUMN_HEIGHT = 350;
     private static final int COLUMN_GAP = 10;
     private static final int HEADER_HEIGHT = 44;
     private static final int ROW_HEIGHT = 24;
     private static final int ROW_MARGIN = 7;
     private static final int PANEL_RADIUS = 10;
-    private static final int ACTIVE = 0x704B2A70;
-    private static final int HOVER = 0x3A9885B8;
-    private static final int TEXT = 0xFFF1EEF8;
-    private static final int DISABLED = 0xFFB8B2C3;
-    private static final int MUTED = 0xFF817A92;
+    private static final int ACTIVE = 0x754D2D78;
+    private static final int HOVER = 0x3E7D6A9D;
+    private static final int TEXT = 0xFFF6F2FF;
+    private static final int DISABLED = 0xFFC5BFCE;
+    private static final int MUTED = 0xFF8E879D;
     private static final int SEARCH_WIDTH = 154;
     private static final int SEARCH_HEIGHT = 26;
-    private static final Identifier UI_FONT = Identifier.of("minecraft", "uniform");
+    private static final Identifier UI_FONT = Identifier.of("liquidglass", "calibri");
+    private static final Identifier TITLE_FONT = Identifier.of("liquidglass", "calibri_title");
 
     private static final List<Module> MODULES = List.of(
             new Module("Anti Bot", Category.COMBAT, ""),
@@ -56,20 +55,21 @@ public final class ClickGuiScreen extends Screen {
             new Module("Speed", Category.MOVEMENT, ""),
 
             new Module("Ambience", Category.VISUALS),
+            new Module("Sourceions", Category.VISUALS, "PREMIUM"),
+            new Module("Leaked Sourceity View", Category.VISUALS, ""),
             new Module("Arrows", Category.VISUALS),
             new Module("Aspect Ratio", Category.VISUALS),
             new Module("Block ESP", Category.VISUALS),
+            new Module("China Hat", Category.VISUALS),
+            new Module("SourceByM", Category.VISUALS, "PREMIUM"),
+            new Module("Entity ESP", Category.VISUALS),
             new Module("Full Bright", Category.VISUALS, ""),
-            new Module("Armor HUD", Category.VISUALS, enabled -> ClientConfig.armorHudEnabled = enabled),
-            new Module("Hotkeys HUD", Category.VISUALS, enabled -> HudModuleState.hotkeysEnabled = enabled),
-            new Module("Active Potions", Category.VISUALS, enabled -> HudModuleState.activePotionsEnabled = enabled),
-            new Module("Staff Online", Category.VISUALS, enabled -> HudModuleState.staffOnlineEnabled = enabled),
-            new Module("Target HUD", Category.VISUALS, enabled -> HudModuleState.targetHudEnabled = enabled),
-            new Module("Info HUD", Category.VISUALS, enabled -> HudModuleState.infoHudEnabled = enabled),
-            new Module("Item Physics", Category.VISUALS),
+            new Module("Hands", Category.VISUALS, ""),
+            new Module("Interface", Category.VISUALS, ""),
 
             new Module("Anti AFK", Category.PLAYER, ""),
-            new Module("Auto Armor", Category.PLAYER, "PREMIUM"),
+            new Module("Auto Armor", Category.PLAYER),
+            new Module("Auto Buy", Category.PLAYER),
             new Module("Auto Eat", Category.PLAYER, ""),
             new Module("Auto Eat Gapple", Category.PLAYER, ""),
             new Module("Auto Fish", Category.PLAYER, ""),
@@ -77,21 +77,21 @@ public final class ClickGuiScreen extends Screen {
             new Module("Auto Potion", Category.PLAYER, ""),
             new Module("Auto Respawn", Category.PLAYER),
             new Module("Auto Tool", Category.PLAYER),
-            new Module("Auto Trade", Category.PLAYER, ""),
-            new Module("Auto Transfer", Category.PLAYER),
-            new Module("Blink", Category.PLAYER),
+            new Module("Click Pearl", Category.PLAYER),
+            new Module("Fast Break", Category.PLAYER),
 
             new Module("Air Place", Category.MISC),
+            new Module("Auction Helper", Category.MISC),
+            new Module("Auto Auth", Category.MISC, "PREMIUM"),
             new Module("Auto Leave", Category.MISC, ""),
             new Module("Auto Tpaccept", Category.MISC, ""),
+            new Module("Auto Trade", Category.MISC),
+            new Module("Auto Transfer", Category.MISC),
+            new Module("Chat Helper", Category.MISC, ""),
+            new Module("Click Friend", Category.MISC, ""),
             new Module("Discord Activity", Category.MISC),
-            new Module("Funtime Helper", Category.MISC, "PREMIUM"),
-            new Module("Inventory Plus", Category.MISC, ""),
-            new Module("Multi Actions", Category.MISC, ""),
-            new Module("Name Protect", Category.MISC, ""),
-            new Module("Open Walls", Category.MISC, ""),
-            new Module("Really World Helper", Category.MISC),
-            new Module("Sounds", Category.MISC, "")
+            new Module("Elytra Helper", Category.MISC),
+            new Module("Exp Bottle Filling", Category.MISC, "")
     );
 
     private int columnsX;
@@ -104,12 +104,6 @@ public final class ClickGuiScreen extends Screen {
         setEnabled("Gui Move", true);
         setEnabled("No Jump Delay", true);
         setEnabled("Discord Activity", true);
-        setEnabled("Armor HUD", ClientConfig.armorHudEnabled);
-        setEnabled("Hotkeys HUD", HudModuleState.hotkeysEnabled);
-        setEnabled("Active Potions", HudModuleState.activePotionsEnabled);
-        setEnabled("Staff Online", HudModuleState.staffOnlineEnabled);
-        setEnabled("Target HUD", HudModuleState.targetHudEnabled);
-        setEnabled("Info HUD", HudModuleState.infoHudEnabled);
     }
 
     @Override
@@ -127,17 +121,19 @@ public final class ClickGuiScreen extends Screen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         updateLayout();
-        context.fill(0, 0, width, height, 0x57070612);
+        ShaderRenderUtil.beginFrame();
+        context.fill(0, 0, width, height, 0x42070612);
         for (Category category : Category.values()) {
             int x = columnsX + category.ordinal() * (COLUMN_WIDTH + COLUMN_GAP);
             drawCategory(context, category, x, columnsY, mouseX, mouseY);
         }
         drawSearch(context);
+        ShaderRenderUtil.endFrame();
     }
 
     private void drawCategory(DrawContext context, Category category, int x, int y, int mouseX, int mouseY) {
         ShaderRenderUtil.drawGlassPanel(context, x, y, COLUMN_WIDTH, COLUMN_HEIGHT, PANEL_RADIUS);
-        Text title = ui(category.title());
+        Text title = titleText(category.title());
         int titleX = x + (COLUMN_WIDTH - textRenderer.getWidth(title)) / 2;
         context.drawText(textRenderer, title, titleX, y + 14, TEXT, false);
         context.fill(x + 12, y + HEADER_HEIGHT - 4, x + COLUMN_WIDTH - 12, y + HEADER_HEIGHT - 3, 0x382E3854);
@@ -175,6 +171,10 @@ public final class ClickGuiScreen extends Screen {
 
     private Text ui(String value) {
         return Text.literal(value).fillStyle(Style.EMPTY.withFont(UI_FONT));
+    }
+
+    private Text titleText(String value) {
+        return Text.literal(value).fillStyle(Style.EMPTY.withFont(TITLE_FONT).withBold(true));
     }
 
     @Override

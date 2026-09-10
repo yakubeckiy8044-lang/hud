@@ -6,6 +6,8 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import ru.example.liquidglass.LiquidGlassClient;
@@ -20,10 +22,43 @@ public final class ShaderRenderUtil {
     private static int program;
     private static int vao;
     private static int vbo;
+    private static int backgroundTexture;
+    private static int backgroundWidth;
+    private static int backgroundHeight;
+    private static boolean backgroundReady;
     private static boolean initialized;
 
     private ShaderRenderUtil() {}
     public static void register() {}
+
+    /** Copies the current framebuffer once so the glass shader can blur the world behind it. */
+    public static void beginFrame() {
+        ensureInitialized();
+        MinecraftClient client = MinecraftClient.getInstance();
+        int width = client.getWindow().getFramebufferWidth();
+        int height = client.getWindow().getFramebufferHeight();
+        if (backgroundTexture == 0) backgroundTexture = GL11.glGenTextures();
+
+        GL13.glActiveTexture(GL13.GL_TEXTURE0);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, backgroundTexture);
+        if (width != backgroundWidth || height != backgroundHeight) {
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_CLAMP_TO_EDGE);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_CLAMP_TO_EDGE);
+            GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, width, height, 0,
+                    GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, (java.nio.ByteBuffer) null);
+            backgroundWidth = width;
+            backgroundHeight = height;
+        }
+        GL11.glCopyTexSubImage2D(GL11.GL_TEXTURE_2D, 0, 0, 0, 0, 0, width, height);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+        backgroundReady = true;
+    }
+
+    public static void endFrame() {
+        backgroundReady = false;
+    }
 
     private static void ensureInitialized() {
         if (initialized) return;
@@ -96,6 +131,10 @@ public final class ShaderRenderUtil {
         GL20.glUniform2f(GL20.glGetUniformLocation(program, "ScreenSize"), framebufferWidth, framebufferHeight);
         GL20.glUniform4f(GL20.glGetUniformLocation(program, "Panel"), px, framebufferHeight - py - ph, pw, ph);
         GL20.glUniform1f(GL20.glGetUniformLocation(program, "Radius"), radius * Math.min(scaleX, scaleY));
+        GL20.glUniform1i(GL20.glGetUniformLocation(program, "UseBackground"), backgroundReady ? 1 : 0);
+        GL13.glActiveTexture(GL13.GL_TEXTURE0);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, backgroundReady ? backgroundTexture : 0);
+        GL20.glUniform1i(GL20.glGetUniformLocation(program, "Background"), 0);
         GL30.glBindVertexArray(vao);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
         var buffer = org.lwjgl.BufferUtils.createFloatBuffer(vertices.length);
@@ -104,6 +143,7 @@ public final class ShaderRenderUtil {
         org.lwjgl.opengl.GL11.glDrawArrays(org.lwjgl.opengl.GL11.GL_TRIANGLE_FAN, 0, 4);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         GL30.glBindVertexArray(0);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
         GL20.glUseProgram(0);
         RenderSystem.enableCull();
         RenderSystem.disableBlend();
