@@ -17,7 +17,7 @@ void main() {
     float border = 1.0 - smoothstep(0.0, 1.5, abs(d));
     if (fill <= 0.0) discard;
     vec2 uv = pixel / ScreenSize;
-    vec3 glass = vec3(0.035, 0.045, 0.065);
-    vec3 edge = mix(vec3(0.25, 0.75, 1.0), vec3(0.80, 0.35, 1.0), uv.y);
+    vec3 glass = mix(vec3(0.055, 0.028, 0.095), vec3(0.025, 0.035, 0.080), uv.x);
+    vec3 edge = mix(vec3(0.34, 0.24, 0.82), vec3(0.27, 0.78, 1.0), smoothstep(0.08, 0.92, uv.y));
     fragColor = vec4(mix(glass, edge, border * 0.85), fill * 0.92);
 }
