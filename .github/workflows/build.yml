@@ -1,0 +1,24 @@
+name: Build Mod
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21' # Если версия игры 1.20.5 или новее, замени 17 на 21
+          distribution: 'temurin'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+      - name: Build JAR
+        run: gradle build
+      - name: Save Mod
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mod-JAR
+          path: build/libs/*.jar
