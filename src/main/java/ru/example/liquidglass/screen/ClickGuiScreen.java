@@ -2,7 +2,9 @@ package ru.example.liquidglass.screen;
 
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import ru.example.liquidglass.ClientConfig;
 import ru.example.liquidglass.hud.HudModuleState;
 import ru.example.liquidglass.render.ShaderRenderUtil;
@@ -10,16 +12,18 @@ import ru.example.liquidglass.render.ShaderRenderUtil;
 import java.util.List;
 
 public final class ClickGuiScreen extends Screen {
-    private static final int COLUMN_WIDTH = 128;
-    private static final int COLUMN_HEIGHT = 280;
-    private static final int COLUMN_GAP = 12;
-    private static final int HEADER_HEIGHT = 38;
-    private static final int ROW_HEIGHT = 27;
+    private static final int COLUMN_WIDTH = 156;
+    private static final int COLUMN_HEIGHT = 236;
+    private static final int COLUMN_GAP = 10;
+    private static final int HEADER_HEIGHT = 42;
+    private static final int ROW_HEIGHT = 22;
     private static final int ROW_MARGIN = 8;
-    private static final int PANEL_RADIUS = 12;
-    private static final int ACCENT = 0xFF69E6D0;
-    private static final int DISABLED = 0xFF9AA3B2;
-    private static final int HOVER = 0x2638D8C8;
+    private static final int PANEL_RADIUS = 11;
+    private static final int ACCENT = 0xFF73E4D2;
+    private static final int DISABLED = 0xFFD0D4DE;
+    private static final int MUTED = 0xFF777F91;
+    private static final int HOVER = 0x1FFFFFFF;
+    private static final Identifier UI_FONT = Identifier.of("minecraft", "uniform");
 
     private static final List<Module> MODULES = List.of(
             new Module("Armor HUD", Category.VISUALS, enabled -> ClientConfig.armorHudEnabled = enabled),
@@ -52,7 +56,9 @@ public final class ClickGuiScreen extends Screen {
     }
 
     @Override
-    protected void init() { updateLayout(); }
+    protected void init() {
+        updateLayout();
+    }
 
     private void updateLayout() {
         int totalWidth = Category.values().length * COLUMN_WIDTH
@@ -72,9 +78,10 @@ public final class ClickGuiScreen extends Screen {
 
     private void drawCategory(DrawContext context, Category category, int x, int y, int mouseX, int mouseY) {
         ShaderRenderUtil.drawGlassPanel(context, x, y, COLUMN_WIDTH, COLUMN_HEIGHT, PANEL_RADIUS);
-        String title = category.title();
-        context.drawText(textRenderer, Text.literal(title),
-                x + (COLUMN_WIDTH - textRenderer.getWidth(title)) / 2, y + 14, 0xFFFFFFFF, true);
+
+        Text title = ui(category.title());
+        int titleX = x + (COLUMN_WIDTH - textRenderer.getWidth(title)) / 2;
+        context.drawText(textRenderer, title, titleX, y + 14, 0xFFFFFFFF, false);
 
         int row = 0;
         for (Module module : MODULES) {
@@ -82,20 +89,31 @@ public final class ClickGuiScreen extends Screen {
             int rowX = x + ROW_MARGIN;
             int rowY = y + HEADER_HEIGHT + row * ROW_HEIGHT;
             int rowWidth = COLUMN_WIDTH - ROW_MARGIN * 2;
-            int rowHeight = ROW_HEIGHT - 4;
-            if (inside(mouseX, mouseY, rowX, rowY, rowWidth, rowHeight)) {
+            int rowHeight = ROW_HEIGHT - 2;
+            boolean hovered = inside(mouseX, mouseY, rowX, rowY, rowWidth, rowHeight);
+
+            if (hovered) {
                 context.fill(rowX, rowY, rowX + rowWidth, rowY + rowHeight, HOVER);
             }
-            context.drawText(textRenderer, Text.literal(module.name()), rowX + 7, rowY + 5,
-                    module.enabled() ? ACCENT : DISABLED, false);
+
+            Text label = ui(module.name());
+            int labelColor = module.enabled() ? ACCENT : DISABLED;
+            context.drawText(textRenderer, label, rowX + 7, rowY + 5, labelColor, false);
+            context.drawText(textRenderer, ui("..."), rowX + rowWidth - 17, rowY + 5,
+                    module.enabled() ? ACCENT : MUTED, false);
             row++;
         }
+    }
+
+    private Text ui(String value) {
+        return Text.literal(value).fillStyle(Style.EMPTY.withFont(UI_FONT));
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button != 0) return super.mouseClicked(mouseX, mouseY, button);
         updateLayout();
+
         for (Category category : Category.values()) {
             int x = columnsX + category.ordinal() * (COLUMN_WIDTH + COLUMN_GAP);
             int row = 0;
@@ -103,7 +121,7 @@ public final class ClickGuiScreen extends Screen {
                 if (module.category() != category) continue;
                 int rowX = x + ROW_MARGIN;
                 int rowY = columnsY + HEADER_HEIGHT + row * ROW_HEIGHT;
-                if (inside(mouseX, mouseY, rowX, rowY, COLUMN_WIDTH - ROW_MARGIN * 2, ROW_HEIGHT - 4)) {
+                if (inside(mouseX, mouseY, rowX, rowY, COLUMN_WIDTH - ROW_MARGIN * 2, ROW_HEIGHT - 2)) {
                     module.toggle();
                     return true;
                 }
@@ -118,7 +136,8 @@ public final class ClickGuiScreen extends Screen {
     }
 
     @Override
-    public boolean shouldPause() { return false; }
+    public boolean shouldPause() {
+        return false;
+    }
 }
-
 
