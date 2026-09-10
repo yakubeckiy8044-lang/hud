@@ -1,15 +1,15 @@
 package ru.example.liquidglass.screen;
 
-import java.util.function.BooleanConsumer;
+import java.util.function.Consumer;
 
 public final class Module {
     private final String name;
     private final Category category;
-    private final BooleanConsumer stateListener;
+    private final Consumer<Boolean> stateListener;
     private boolean enabled;
 
     public Module(String name, Category category) { this(name, category, null); }
-    public Module(String name, Category category, BooleanConsumer stateListener) {
+    public Module(String name, Category category, Consumer<Boolean> stateListener) {
         this.name = name;
         this.category = category;
         this.stateListener = stateListener;
