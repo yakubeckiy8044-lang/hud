@@ -3,6 +3,7 @@ package ru.example.liquidglass.hud;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffectUtil;
@@ -27,7 +28,7 @@ public final class ActivePotionsHud {
         for (StatusEffectInstance effect : client.player.getStatusEffects()) {
             int rowY = y + HEADER + row * ROW;
             Sprite sprite = client.getStatusEffectSpriteManager().getSprite(effect.getEffectType());
-            context.drawSprite(x + 8, rowY, 0, 18, 18, sprite);
+            context.drawSpriteStretched(RenderLayer::getGuiTextured, sprite, x + 8, rowY, 18, 18);
             Text name = effect.getEffectType().value().getName();
             if (effect.getAmplifier() > 0) name = Text.literal(name.getString() + " " + (effect.getAmplifier() + 1));
             Text timer = StatusEffectUtil.getDurationText(effect, 1.0f, 20.0f);
