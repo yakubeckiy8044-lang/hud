@@ -1,6 +1,9 @@
 pluginManagement {
     repositories {
-        maven { url = uri("https://maven.fabricmc.net/") }
+        maven {
+            name = "Fabric"
+            url = "https://maven.fabricmc.net/"
+        }
         gradlePluginPortal()
         mavenCentral()
     }
@@ -8,9 +11,12 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
-        maven { url = uri("https://maven.fabricmc.net/") }
+        maven {
+            name = "Fabric"
+            url = "https://maven.fabricmc.net/"
+        }
         mavenCentral()
     }
 }
 
-rootProject.name = "liquid-glass"
+rootProject.name = "pearl-target"
