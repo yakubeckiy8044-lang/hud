@@ -24,8 +24,8 @@ public final class ClickGuiScreen extends Screen {
     private static final int MUTED = 0xFF8E879D;
     private static final int SEARCH_WIDTH = 154;
     private static final int SEARCH_HEIGHT = 26;
-    private static final Identifier UI_FONT = Identifier.of("liquidglass", "calibri");
-    private static final Identifier TITLE_FONT = Identifier.of("liquidglass", "calibri_title");
+    private static final float TARGET_MENU_WIDTH = 0.66f;
+    private static final Identifier UI_FONT = Identifier.of("minecraft", "uniform");
 
     private static final List<Module> MODULES = List.of(
             new Module("Anti Bot", Category.COMBAT, ""),
@@ -97,6 +97,7 @@ public final class ClickGuiScreen extends Screen {
     private int columnsX;
     private int columnsY;
     private int searchY;
+    private float uiScale = 1.0f;
 
     public ClickGuiScreen() {
         super(Text.literal("Liquid Glass"));
@@ -112,10 +113,16 @@ public final class ClickGuiScreen extends Screen {
     }
 
     private void updateLayout() {
-        int totalWidth = Category.values().length * COLUMN_WIDTH + (Category.values().length - 1) * COLUMN_GAP;
-        columnsX = Math.max(8, (width - totalWidth) / 2);
-        columnsY = Math.max(18, (height - COLUMN_HEIGHT - SEARCH_HEIGHT - 14) / 2);
-        searchY = columnsY + COLUMN_HEIGHT + 12;
+        float baseWidth = Category.values().length * COLUMN_WIDTH + (Category.values().length - 1) * COLUMN_GAP;
+        uiScale = Math.min(1.0f, Math.max(0.35f, (width * TARGET_MENU_WIDTH) / baseWidth));
+        int scaledWidth = scaled(COLUMN_WIDTH);
+        int scaledGap = scaled(COLUMN_GAP);
+        int scaledHeight = scaled(COLUMN_HEIGHT);
+        int scaledSearchHeight = scaled(SEARCH_HEIGHT);
+        int totalWidth = Category.values().length * scaledWidth + (Category.values().length - 1) * scaledGap;
+        columnsX = Math.max(0, (width - totalWidth) / 2);
+        columnsY = Math.max(4, (height - scaledHeight - scaledSearchHeight - scaled(14)) / 2);
+        searchY = columnsY + scaledHeight + scaled(12);
     }
 
     @Override
@@ -124,7 +131,7 @@ public final class ClickGuiScreen extends Screen {
         ShaderRenderUtil.beginFrame();
         context.fill(0, 0, width, height, 0x42070612);
         for (Category category : Category.values()) {
-            int x = columnsX + category.ordinal() * (COLUMN_WIDTH + COLUMN_GAP);
+            int x = columnsX + category.ordinal() * (scaled(COLUMN_WIDTH) + scaled(COLUMN_GAP));
             drawCategory(context, category, x, columnsY, mouseX, mouseY);
         }
         drawSearch(context);
@@ -132,19 +139,22 @@ public final class ClickGuiScreen extends Screen {
     }
 
     private void drawCategory(DrawContext context, Category category, int x, int y, int mouseX, int mouseY) {
-        ShaderRenderUtil.drawGlassPanel(context, x, y, COLUMN_WIDTH, COLUMN_HEIGHT, PANEL_RADIUS);
+        ShaderRenderUtil.drawGlassPanel(context, x, y, scaled(COLUMN_WIDTH), scaled(COLUMN_HEIGHT), PANEL_RADIUS * uiScale);
+        context.getMatrices().push();
+        context.getMatrices().translate(x, y, 0.0f);
+        context.getMatrices().scale(uiScale, uiScale, 1.0f);
         Text title = titleText(category.title());
-        int titleX = x + (COLUMN_WIDTH - textRenderer.getWidth(title)) / 2;
-        context.drawText(textRenderer, title, titleX, y + 14, TEXT, false);
-        context.fill(x + 12, y + HEADER_HEIGHT - 4, x + COLUMN_WIDTH - 12, y + HEADER_HEIGHT - 3, 0x382E3854);
+        int titleX = (COLUMN_WIDTH - textRenderer.getWidth(title)) / 2;
+        context.drawText(textRenderer, title, titleX, 14, TEXT, false);
+        context.fill(12, HEADER_HEIGHT - 4, COLUMN_WIDTH - 12, HEADER_HEIGHT - 3, 0x382E3854);
 
         int row = 0;
         for (Module module : MODULES) {
             if (module.category() != category) continue;
-            int rowX = x + ROW_MARGIN;
-            int rowY = y + HEADER_HEIGHT + row * ROW_HEIGHT;
+            int rowX = ROW_MARGIN;
+            int rowY = HEADER_HEIGHT + row * ROW_HEIGHT;
             int rowWidth = COLUMN_WIDTH - ROW_MARGIN * 2;
-            boolean hovered = inside(mouseX, mouseY, rowX, rowY, rowWidth, ROW_HEIGHT - 2);
+            boolean hovered = inside(mouseX, mouseY, x + scaled(rowX), y + scaled(rowY), scaled(rowWidth), scaled(ROW_HEIGHT - 2));
             if (module.enabled()) context.fill(rowX, rowY, rowX + rowWidth, rowY + ROW_HEIGHT - 2, ACTIVE);
             else if (hovered) context.fill(rowX, rowY, rowX + rowWidth, rowY + ROW_HEIGHT - 2, HOVER);
 
@@ -159,14 +169,19 @@ public final class ClickGuiScreen extends Screen {
             context.fill(rowX + 5, rowY + ROW_HEIGHT - 3, rowX + rowWidth - 5, rowY + ROW_HEIGHT - 2, 0x242A2940);
             row++;
         }
+        context.getMatrices().pop();
     }
 
     private void drawSearch(DrawContext context) {
-        int x = (width - SEARCH_WIDTH) / 2;
-        ShaderRenderUtil.drawGlassPanel(context, x, searchY, SEARCH_WIDTH, SEARCH_HEIGHT, 7.0f);
-        context.drawBorder(x + 10, searchY + 7, 8, 8, 0xFFB4A9C5);
-        context.fill(x + 17, searchY + 15, x + 21, searchY + 17, 0xFFB4A9C5);
-        context.drawText(textRenderer, ui("Поиск"), x + 30, searchY + 8, 0xFFAAA2B8, false);
+        int x = (width - scaled(SEARCH_WIDTH)) / 2;
+        ShaderRenderUtil.drawGlassPanel(context, x, searchY, scaled(SEARCH_WIDTH), scaled(SEARCH_HEIGHT), 7.0f * uiScale);
+        context.getMatrices().push();
+        context.getMatrices().translate(x, searchY, 0.0f);
+        context.getMatrices().scale(uiScale, uiScale, 1.0f);
+        context.drawBorder(10, 7, 8, 8, 0xFFB4A9C5);
+        context.fill(17, 15, 21, 17, 0xFFB4A9C5);
+        context.drawText(textRenderer, ui("Поиск"), 30, 8, 0xFFAAA2B8, false);
+        context.getMatrices().pop();
     }
 
     private Text ui(String value) {
@@ -174,7 +189,11 @@ public final class ClickGuiScreen extends Screen {
     }
 
     private Text titleText(String value) {
-        return Text.literal(value).fillStyle(Style.EMPTY.withFont(TITLE_FONT).withBold(true));
+        return Text.literal(value).fillStyle(Style.EMPTY.withFont(UI_FONT).withBold(true));
+    }
+
+    private int scaled(int value) {
+        return Math.max(1, Math.round(value * uiScale));
     }
 
     @Override
@@ -182,13 +201,13 @@ public final class ClickGuiScreen extends Screen {
         if (button != 0) return super.mouseClicked(mouseX, mouseY, button);
         updateLayout();
         for (Category category : Category.values()) {
-            int x = columnsX + category.ordinal() * (COLUMN_WIDTH + COLUMN_GAP);
+            int x = columnsX + category.ordinal() * (scaled(COLUMN_WIDTH) + scaled(COLUMN_GAP));
             int row = 0;
             for (Module module : MODULES) {
                 if (module.category() != category) continue;
-                int rowX = x + ROW_MARGIN;
-                int rowY = columnsY + HEADER_HEIGHT + row * ROW_HEIGHT;
-                if (inside(mouseX, mouseY, rowX, rowY, COLUMN_WIDTH - ROW_MARGIN * 2, ROW_HEIGHT - 2)) {
+                int rowX = x + scaled(ROW_MARGIN);
+                int rowY = columnsY + scaled(HEADER_HEIGHT + row * ROW_HEIGHT);
+                if (inside(mouseX, mouseY, rowX, rowY, scaled(COLUMN_WIDTH - ROW_MARGIN * 2), scaled(ROW_HEIGHT - 2))) {
                     module.toggle();
                     return true;
                 }
