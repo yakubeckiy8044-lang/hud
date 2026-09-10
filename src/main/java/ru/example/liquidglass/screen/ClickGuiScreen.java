@@ -7,45 +7,82 @@ import ru.example.liquidglass.ClientConfig;
 import ru.example.liquidglass.render.ShaderRenderUtil;
 
 public final class ClickGuiScreen extends Screen {
-    private static final int PANEL_X = 80, PANEL_Y = 45, PANEL_W = 360, PANEL_H = 230;
-    private static final int SLIDER_X = 105, SLIDER_W = 270;
+    private static final int PANEL_W = 360;
+    private static final int PANEL_H = 230;
+    private static final int SLIDER_W = 270;
+    private static final int INNER_X = 25;
+    private static final int HEADER_H = 58;
+    private static final int CHECK_Y = 78;
+    private static final int X_LABEL_Y = 112;
+    private static final int X_SLIDER_Y = 132;
+    private static final int Y_LABEL_Y = 165;
+    private static final int Y_SLIDER_Y = 185;
 
-    public ClickGuiScreen() { super(Text.literal("Liquid Glass")); }
+    private int panelX;
+    private int panelY;
+    private int activeSlider = 0;
+
+    public ClickGuiScreen() {
+        super(Text.literal("Liquid Glass"));
+    }
+
+    @Override
+    protected void init() {
+        panelX = (width - PANEL_W) / 2;
+        panelY = (height - PANEL_H) / 2;
+    }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        ShaderRenderUtil.drawGlassPanel(context, PANEL_X, PANEL_Y, PANEL_W, PANEL_H, 16);
-        context.drawText(textRenderer, Text.literal("LIQUID GLASS"), PANEL_X + 20, PANEL_Y + 15, 0xFFFFFFFF, true);
-        context.drawText(textRenderer, Text.literal("Visual settings"), PANEL_X + 32, PANEL_Y + 53, 0xFFB7C8E8, false);
-        context.fill(105, 100, 119, 114, ClientConfig.armorHudEnabled ? 0xFF6DE6A0 : 0xFF555D70);
-        context.drawText(textRenderer, Text.literal("Armor HUD"), 128, 102, 0xFFFFFFFF, false);
-        context.drawText(textRenderer, Text.literal("Armor HUD X: " + ClientConfig.armorHudX), SLIDER_X, 135, 0xFFFFFFFF, false);
-        drawSlider(context, 150, ClientConfig.armorHudX, 0, Math.max(0, width - ClientConfig.armorHudWidth));
-        context.drawText(textRenderer, Text.literal("Armor HUD Y: " + ClientConfig.armorHudY), SLIDER_X, 180, 0xFFFFFFFF, false);
-        drawSlider(context, 195, ClientConfig.armorHudY, 0, Math.max(0, height - ClientConfig.armorHudHeight));
+        panelX = (width - PANEL_W) / 2;
+        panelY = (height - PANEL_H) / 2;
+
+        ShaderRenderUtil.drawGlassPanel(context, panelX, panelY, PANEL_W, PANEL_H, 16.0f);
+
+        int left = panelX + INNER_X;
+        context.drawText(textRenderer, Text.literal("LIQUID GLASS"), left, panelY + 15, 0xFFFFFFFF, true);
+        context.drawText(textRenderer, Text.literal("Visual settings"), left, panelY + 38, 0xFFB7C8E8, false);
+
+        int checkX = left;
+        context.fill(checkX, panelY + CHECK_Y, checkX + 14, panelY + CHECK_Y + 14,
+                ClientConfig.armorHudEnabled ? 0xFF6DE6A0 : 0xFF555D70);
+        context.drawText(textRenderer, Text.literal("Armor HUD"), checkX + 23, panelY + CHECK_Y + 2, 0xFFFFFFFF, false);
+
+        int sliderX = left;
+        int maxX = Math.max(0, width - ClientConfig.armorHudWidth);
+        int maxY = Math.max(0, height - ClientConfig.armorHudHeight);
+
+        context.drawText(textRenderer, Text.literal("Armor HUD X: " + ClientConfig.armorHudX), sliderX, panelY + X_LABEL_Y, 0xFFFFFFFF, false);
+        drawSlider(context, sliderX, panelY + X_SLIDER_Y, ClientConfig.armorHudX, 0, maxX);
+
+        context.drawText(textRenderer, Text.literal("Armor HUD Y: " + ClientConfig.armorHudY), sliderX, panelY + Y_LABEL_Y, 0xFFFFFFFF, false);
+        drawSlider(context, sliderX, panelY + Y_SLIDER_Y, ClientConfig.armorHudY, 0, maxY);
     }
 
-    private void drawSlider(DrawContext context, int y, int value, int min, int max) {
-        context.fill(SLIDER_X, y, SLIDER_X + SLIDER_W, y + 4, 0xFF343B4D);
-        float normalized = max == min ? 0 : (value - min) / (float) (max - min);
-        int knob = SLIDER_X + Math.round(normalized * SLIDER_W);
-        context.fill(SLIDER_X, y, knob, y + 4, 0xFF72CFFF);
-        context.fill(knob - 4, y - 4, knob + 4, y + 8, 0xFFFFFFFF);
+    private void drawSlider(DrawContext context, int x, int y, int value, int min, int max) {
+        context.fill(x, y, x + SLIDER_W, y + 4, 0xFF343B4D);
+        float normalized = max <= min ? 0.0f : (value - min) / (float) (max - min);
+        int knobX = x + Math.round(normalized * SLIDER_W);
+        context.fill(x, y, knobX, y + 4, 0xFF72CFFF);
+        context.fill(knobX - 4, y - 4, knobX + 4, y + 8, 0xFFFFFFFF);
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button != 0) return super.mouseClicked(mouseX, mouseY, button);
-        if (inside(mouseX, mouseY, 105, 100, 14, 14)) {
+        int left = panelX + INNER_X;
+        if (inside(mouseX, mouseY, left, panelY + CHECK_Y, 14, 14)) {
             ClientConfig.armorHudEnabled = !ClientConfig.armorHudEnabled;
             return true;
         }
-        if (mouseY >= 145 && mouseY <= 165) {
-            ClientConfig.armorHudX = sliderValue(mouseX, 0, Math.max(0, width - ClientConfig.armorHudWidth));
+        if (inside(mouseX, mouseY, left, panelY + X_SLIDER_Y - 6, SLIDER_W, 16)) {
+            activeSlider = 1;
+            updateSlider(mouseX, true);
             return true;
         }
-        if (mouseY >= 190 && mouseY <= 210) {
-            ClientConfig.armorHudY = sliderValue(mouseX, 0, Math.max(0, height - ClientConfig.armorHudHeight));
+        if (inside(mouseX, mouseY, left, panelY + Y_SLIDER_Y - 6, SLIDER_W, 16)) {
+            activeSlider = 2;
+            updateSlider(mouseX, false);
             return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
@@ -53,21 +90,26 @@ public final class ClickGuiScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        if (button != 0) return false;
-        if (mouseY >= 145 && mouseY <= 165) {
-            ClientConfig.armorHudX = sliderValue(mouseX, 0, Math.max(0, width - ClientConfig.armorHudWidth));
-            return true;
-        }
-        if (mouseY >= 190 && mouseY <= 210) {
-            ClientConfig.armorHudY = sliderValue(mouseX, 0, Math.max(0, height - ClientConfig.armorHudHeight));
-            return true;
-        }
-        return false;
+        if (button != 0 || activeSlider == 0) return false;
+        updateSlider(mouseX, activeSlider == 1);
+        return true;
     }
 
-    private int sliderValue(double mouseX, int min, int max) {
-        double normalized = Math.max(0, Math.min(1, (mouseX - SLIDER_X) / SLIDER_W));
-        return min + (int) Math.round(normalized * (max - min));
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button == 0) activeSlider = 0;
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    private void updateSlider(double mouseX, boolean xSlider) {
+        int min = 0;
+        int max = xSlider
+                ? Math.max(0, width - ClientConfig.armorHudWidth)
+                : Math.max(0, height - ClientConfig.armorHudHeight);
+        int value = min + (int) Math.round(Math.max(0.0, Math.min(1.0,
+                (mouseX - (panelX + INNER_X)) / (double) SLIDER_W)) * (max - min));
+        if (xSlider) ClientConfig.armorHudX = value;
+        else ClientConfig.armorHudY = value;
     }
 
     private static boolean inside(double mx, double my, int x, int y, int w, int h) {
@@ -75,5 +117,7 @@ public final class ClickGuiScreen extends Screen {
     }
 
     @Override
-    public boolean shouldPause() { return false; }
+    public boolean shouldPause() {
+        return false;
+    }
 }
