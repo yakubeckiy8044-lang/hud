@@ -24,7 +24,7 @@ public final class ArmorHud {
         context.drawText(client.textRenderer, Text.literal("ARMOR"), x + 8, y + 5, 0xFFFFFFFF, true);
 
         int iconX = x + 8;
-        for (ItemStack stack : player.getInventory().getArmorItems()) {
+        for (ItemStack stack : player.getArmorItems()) {
             if (!stack.isEmpty()) {
                 context.drawItem(stack, iconX, y + 17);
                 int max = stack.getMaxDamage();
