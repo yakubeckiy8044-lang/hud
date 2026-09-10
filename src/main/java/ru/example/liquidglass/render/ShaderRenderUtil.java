@@ -2,6 +2,7 @@ package ru.example.liquidglass.render;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
@@ -40,8 +41,12 @@ public final class ShaderRenderUtil {
         int height = client.getWindow().getFramebufferHeight();
         if (backgroundTexture == 0) backgroundTexture = GL11.glGenTextures();
 
-        GL13.glActiveTexture(GL13.GL_TEXTURE0);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, backgroundTexture);
+        // Keep RenderSystem's shader-texture cache in sync. A raw bind would
+        // leave the cache pointing at the old texture, so the next font draw
+        // could silently sample the glass framebuffer instead of the glyph
+        // atlas.
+        int previousTexture = RenderSystem.getShaderTexture(0);
+        RenderSystem.setShaderTexture(0, backgroundTexture);
         if (width != backgroundWidth || height != backgroundHeight) {
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
@@ -53,7 +58,7 @@ public final class ShaderRenderUtil {
             backgroundHeight = height;
         }
         GL11.glCopyTexSubImage2D(GL11.GL_TEXTURE_2D, 0, 0, 0, 0, 0, width, height);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+        RenderSystem.setShaderTexture(0, previousTexture);
         backgroundReady = true;
     }
 
@@ -80,14 +85,14 @@ public final class ShaderRenderUtil {
         GL20.glDeleteShader(fragmentShader);
         vao = GL30.glGenVertexArrays();
         vbo = GL15.glGenBuffers();
-        GL30.glBindVertexArray(vao);
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
+        RenderSystem.glBindVertexArray(vao);
+        RenderSystem.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
         GL20.glEnableVertexAttribArray(0);
         GL20.glVertexAttribPointer(0, 2, GL20.GL_FLOAT, false, 4 * Float.BYTES, 0L);
         GL20.glEnableVertexAttribArray(1);
         GL20.glVertexAttribPointer(1, 2, GL20.GL_FLOAT, false, 4 * Float.BYTES, 2L * Float.BYTES);
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-        GL30.glBindVertexArray(0);
+        RenderSystem.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+        RenderSystem.glBindVertexArray(0);
         initialized = true;
     }
 
@@ -125,6 +130,8 @@ public final class ShaderRenderUtil {
         float pw = width * scaleX;
         float ph = height * scaleY;
         float[] vertices = { px, py, 0, 0, px, py + ph, 0, 1, px + pw, py + ph, 1, 1, px + pw, py, 1, 0 };
+        ShaderProgram previousShader = RenderSystem.getShader();
+        int previousTexture = RenderSystem.getShaderTexture(0);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
@@ -133,19 +140,26 @@ public final class ShaderRenderUtil {
         GL20.glUniform4f(GL20.glGetUniformLocation(program, "Panel"), px, framebufferHeight - py - ph, pw, ph);
         GL20.glUniform1f(GL20.glGetUniformLocation(program, "Radius"), radius * Math.min(scaleX, scaleY));
         GL20.glUniform1i(GL20.glGetUniformLocation(program, "UseBackground"), backgroundReady ? 1 : 0);
-        GL13.glActiveTexture(GL13.GL_TEXTURE0);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, backgroundReady ? backgroundTexture : 0);
+        RenderSystem.setShaderTexture(0, backgroundReady ? backgroundTexture : previousTexture);
         GL20.glUniform1i(GL20.glGetUniformLocation(program, "Background"), 0);
-        GL30.glBindVertexArray(vao);
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
+        RenderSystem.glBindVertexArray(vao);
+        RenderSystem.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
         var buffer = org.lwjgl.BufferUtils.createFloatBuffer(vertices.length);
         buffer.put(vertices).flip();
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, GL15.GL_STREAM_DRAW);
         org.lwjgl.opengl.GL11.glDrawArrays(org.lwjgl.opengl.GL11.GL_TRIANGLE_FAN, 0, 4);
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-        GL30.glBindVertexArray(0);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+        RenderSystem.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+        RenderSystem.glBindVertexArray(0);
+        RenderSystem.setShaderTexture(0, previousTexture);
         GL20.glUseProgram(0);
+        // GL20.glUseProgram bypasses RenderSystem's shader cache. Restore the
+        // shader that was active before the panel so DrawContext can render
+        // text and icons with their normal Minecraft pipeline.
+        if (previousShader != null) {
+            RenderSystem.setShader(previousShader);
+        } else {
+            RenderSystem.clearShader();
+        }
         RenderSystem.enableCull();
         RenderSystem.disableBlend();
     }

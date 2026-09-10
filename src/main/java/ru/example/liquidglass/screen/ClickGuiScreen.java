@@ -2,9 +2,8 @@ package ru.example.liquidglass.screen;
 
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import ru.example.liquidglass.render.FontManager;
 import ru.example.liquidglass.render.ShaderRenderUtil;
 
 import java.util.List;
@@ -25,8 +24,6 @@ public final class ClickGuiScreen extends Screen {
     private static final int SEARCH_WIDTH = 154;
     private static final int SEARCH_HEIGHT = 26;
     private static final float TARGET_MENU_WIDTH = 0.66f;
-    private static final Identifier UI_FONT = Identifier.of("minecraft", "uniform");
-
     private static final List<Module> MODULES = List.of(
             new Module("Anti Bot", Category.COMBAT, ""),
             new Module("Attack Aura", Category.COMBAT),
@@ -185,11 +182,11 @@ public final class ClickGuiScreen extends Screen {
     }
 
     private Text ui(String value) {
-        return Text.literal(value).fillStyle(Style.EMPTY.withFont(UI_FONT));
+        return FontManager.text(value);
     }
 
     private Text titleText(String value) {
-        return Text.literal(value).fillStyle(Style.EMPTY.withFont(UI_FONT).withBold(true));
+        return FontManager.title(value);
     }
 
     private int scaled(int value) {
