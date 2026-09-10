@@ -112,6 +112,13 @@ public final class HudEditor {
             float scale() { return HudLayout.targetScale; }
             void setPosition(int x, int y) { HudLayout.targetX = x; HudLayout.targetY = y; }
             void setScale(float value) { HudLayout.targetScale = value; }
+        },
+        COOLDOWNS("COOLDOWNS", 156, 56) {
+            int x() { return HudLayout.cooldownsX; }
+            int y() { return HudLayout.cooldownsY; }
+            float scale() { return HudLayout.cooldownsScale; }
+            void setPosition(int x, int y) { HudLayout.cooldownsX = x; HudLayout.cooldownsY = y; }
+            void setScale(float value) { HudLayout.cooldownsScale = value; }
         };
 
         private final String label;

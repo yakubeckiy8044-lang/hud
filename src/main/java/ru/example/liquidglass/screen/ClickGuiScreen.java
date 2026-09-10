@@ -126,7 +126,9 @@ public final class ClickGuiScreen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         updateLayout();
         ShaderRenderUtil.beginFrame();
-        context.fill(0, 0, width, height, 0x42070612);
+        // Keep the world readable behind the compact menu; the glass panels
+        // provide the visual weight themselves.
+        context.fill(0, 0, width, height, 0x18070612);
         for (Category category : Category.values()) {
             int x = columnsX + category.ordinal() * (scaled(COLUMN_WIDTH) + scaled(COLUMN_GAP));
             drawCategory(context, category, x, columnsY, mouseX, mouseY);

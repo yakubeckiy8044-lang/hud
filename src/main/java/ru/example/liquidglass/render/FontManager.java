@@ -3,10 +3,11 @@ package ru.example.liquidglass.render;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import ru.example.liquidglass.LiquidGlassClient;
-
 public final class FontManager {
-    public static final Identifier UI_FONT = Identifier.of(LiquidGlassClient.MOD_ID, "calibri");
+    // Use Minecraft's own atlas for stable Latin/Cyrillic glyphs. A custom
+    // TTF provider can fall back to tofu glyphs on clients where it fails to
+    // load, while the bundled uniform provider is always available.
+    public static final Identifier UI_FONT = Identifier.of("minecraft", "uniform");
 
     private FontManager() {
     }

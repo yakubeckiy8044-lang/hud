@@ -29,6 +29,10 @@ public final class HudLayout {
     public static int targetY = Integer.MIN_VALUE;
     public static float targetScale = 1.0f;
 
+    public static int cooldownsX = 8;
+    public static int cooldownsY = 302;
+    public static float cooldownsScale = 1.0f;
+
     public static void resolveDefaults(int screenWidth, int screenHeight) {
         if (potionsX == Integer.MIN_VALUE) potionsX = screenWidth - 188;
         if (staffX == Integer.MIN_VALUE) staffX = screenWidth - 188;

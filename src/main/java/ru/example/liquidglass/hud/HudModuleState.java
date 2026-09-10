@@ -7,6 +7,7 @@ public final class HudModuleState {
     public static boolean activePotionsEnabled = true;
     public static boolean staffOnlineEnabled = true;
     public static boolean targetHudEnabled = true;
+    public static boolean cooldownsEnabled = true;
     public static int hotkeysX = 8;
     public static int hotkeysY = 90;
     public static int potionsMarginRight = 8;
