@@ -2,6 +2,7 @@ package ru.example.liquidglass.hud;
 
 public final class HudModuleState {
     private HudModuleState() {}
+    public static boolean infoHudEnabled = true;
     public static boolean hotkeysEnabled = true;
     public static boolean activePotionsEnabled = true;
     public static boolean staffOnlineEnabled = true;

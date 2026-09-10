@@ -11,6 +11,8 @@ public final class VisualHud {
     public static void render(DrawContext context, RenderTickCounter tickCounter) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.currentScreen instanceof ClickGuiScreen) return;
+        HudLayout.resolveDefaults(client.getWindow().getScaledWidth(), client.getWindow().getScaledHeight());
+        InfoHud.render(context, tickCounter);
         ArmorHud.render(context, tickCounter);
         HotkeysHud.render(context, tickCounter);
         ActivePotionsHud.render(context, tickCounter);

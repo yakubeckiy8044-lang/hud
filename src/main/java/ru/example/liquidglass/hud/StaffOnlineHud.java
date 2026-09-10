@@ -17,7 +17,7 @@ public final class StaffOnlineHud {
     private StaffOnlineHud() {}
 
     public static void render(DrawContext context, RenderTickCounter tickCounter) {
-        if (!HudModuleState.staffOnlineEnabled) return;
+        if (!HudModuleState.staffOnlineEnabled && !HudEditor.isEditing()) return;
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null || client.options.hudHidden || client.getNetworkHandler() == null) return;
         List<String> staff = new ArrayList<>();
@@ -29,15 +29,26 @@ public final class StaffOnlineHud {
             }
             if (staff.size() >= 6) break;
         }
-        if (staff.isEmpty()) return;
-        int x = client.getWindow().getScaledWidth() - WIDTH - HudModuleState.staffMarginRight;
-        int y = HudModuleState.staffY;
-        ShaderRenderUtil.drawGlassPanel(context, x, y, WIDTH, 28 + staff.size() * ROW + 6, 10.0f);
-        context.drawText(client.textRenderer, Text.literal("STAFF ONLINE"), x + 10, y + 8, 0xFFFFFFFF, true);
-        for (int i = 0; i < staff.size(); i++) {
-            int rowY = y + 29 + i * ROW;
-            context.fill(x + 10, rowY + 5, x + 14, rowY + 9, 0xFF69E6D0);
-            context.drawText(client.textRenderer, Text.literal(staff.get(i)), x + 20, rowY + 1, 0xFFDCE7F0, false);
+        int x = HudLayout.staffX;
+        int y = HudLayout.staffY;
+        float scale = HudLayout.staffScale;
+        int rows = Math.max(1, staff.size());
+        int height = 28 + rows * ROW + 6;
+        ShaderRenderUtil.drawGlassPanel(context, x, y, Math.round(WIDTH * scale), Math.round(height * scale), 10.0f * scale);
+        context.getMatrices().push();
+        context.getMatrices().translate(x, y, 0.0f);
+        context.getMatrices().scale(scale, scale, 1.0f);
+        context.drawText(client.textRenderer, HudStyle.text("STAFF ONLINE"), 10, 8, HudStyle.WHITE, false);
+        if (staff.isEmpty()) {
+            context.drawText(client.textRenderer, HudStyle.text("No staff detected"), 20, 30, HudStyle.MUTED, false);
+            context.getMatrices().pop();
+            return;
         }
+        for (int i = 0; i < staff.size(); i++) {
+            int rowY = 29 + i * ROW;
+            context.fill(10, rowY + 5, 14, rowY + 9, HudStyle.ACCENT);
+            context.drawText(client.textRenderer, HudStyle.text(staff.get(i)), 20, rowY + 1, HudStyle.MUTED, false);
+        }
+        context.getMatrices().pop();
     }
 }

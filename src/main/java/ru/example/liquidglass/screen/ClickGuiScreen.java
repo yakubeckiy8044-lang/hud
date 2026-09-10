@@ -13,7 +13,7 @@ import java.util.List;
 
 public final class ClickGuiScreen extends Screen {
     private static final int COLUMN_WIDTH = 156;
-    private static final int COLUMN_HEIGHT = 236;
+    private static final int COLUMN_HEIGHT = 258;
     private static final int COLUMN_GAP = 10;
     private static final int HEADER_HEIGHT = 42;
     private static final int ROW_HEIGHT = 22;
@@ -34,6 +34,7 @@ public final class ClickGuiScreen extends Screen {
             new Module("Active Potions", Category.VISUALS, enabled -> HudModuleState.activePotionsEnabled = enabled),
             new Module("Staff Online", Category.VISUALS, enabled -> HudModuleState.staffOnlineEnabled = enabled),
             new Module("Target HUD", Category.VISUALS, enabled -> HudModuleState.targetHudEnabled = enabled),
+            new Module("Info HUD", Category.VISUALS, enabled -> HudModuleState.infoHudEnabled = enabled),
             new Module("Anti-AFK", Category.PLAYER),
             new Module("Pearl Target", Category.PLAYER),
             new Module("Auto Respawn", Category.PLAYER),
@@ -53,6 +54,7 @@ public final class ClickGuiScreen extends Screen {
         MODULES.get(5).setEnabled(HudModuleState.activePotionsEnabled);
         MODULES.get(6).setEnabled(HudModuleState.staffOnlineEnabled);
         MODULES.get(7).setEnabled(HudModuleState.targetHudEnabled);
+        MODULES.get(8).setEnabled(HudModuleState.infoHudEnabled);
     }
 
     @Override
