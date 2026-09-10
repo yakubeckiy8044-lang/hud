@@ -78,14 +78,14 @@ public final class HudEditor {
             void setPosition(int x, int y) { HudLayout.infoX = x; HudLayout.infoY = y; }
             void setScale(float value) { HudLayout.infoScale = value; }
         },
-        ARMOR("ARMOR", 112, 132) {
+        ARMOR("ARMOR", 132, 92) {
             int x() { return HudLayout.armorX; }
             int y() { return HudLayout.armorY; }
             float scale() { return HudLayout.armorScale; }
             void setPosition(int x, int y) { HudLayout.armorX = x; HudLayout.armorY = y; }
             void setScale(float value) { HudLayout.armorScale = value; }
         },
-        HOTKEYS("HOTKEYS", 154, 82) {
+        HOTKEYS("HOTKEYS", 214, 82) {
             int x() { return HudLayout.hotkeysX; }
             int y() { return HudLayout.hotkeysY; }
             float scale() { return HudLayout.hotkeysScale; }
@@ -138,8 +138,14 @@ public final class HudEditor {
         abstract void setScale(float value);
 
         String label() { return label; }
-        int width() { return Math.round(baseWidth * scale()); }
-        int height() { return Math.round(baseHeight * scale()); }
+        int width() {
+            return Math.max(1, Math.round(baseWidth
+                    * HudLayout.renderScale(MinecraftClient.getInstance(), scale())));
+        }
+        int height() {
+            return Math.max(1, Math.round(baseHeight
+                    * HudLayout.renderScale(MinecraftClient.getInstance(), scale())));
+        }
         boolean contains(double mouseX, double mouseY) {
             return mouseX >= x() && mouseX <= x() + width()
                     && mouseY >= y() && mouseY <= y() + height();

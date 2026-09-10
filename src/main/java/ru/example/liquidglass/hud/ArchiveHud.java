@@ -50,7 +50,7 @@ public final class ArchiveHud {
 
     private static void watermark(DrawContext c, MinecraftClient mc) {
         if (!HudModuleState.infoHudEnabled && !HudEditor.isEditing()) return;
-        int x = HudLayout.infoX, y = HudLayout.infoY; float s = HudLayout.infoScale;
+        int x = HudLayout.infoX, y = HudLayout.infoY; float s = hudScale(mc, HudLayout.infoScale);
         glass(c, x, y, 202, 44, s); begin(c, x, y, s);
         c.drawText(mc.textRenderer, HudStyle.text("LIQUID GLASS"), 10, 8, HudStyle.WHITE, false);
         c.drawText(mc.textRenderer, HudStyle.text(mc.getCurrentFps() + " FPS"), 104, 8, HudStyle.ACCENT, false);
@@ -62,14 +62,20 @@ public final class ArchiveHud {
 
     private static void armor(DrawContext c, MinecraftClient mc, PlayerEntity p) {
         if (!ClientConfig.armorHudEnabled && !HudEditor.isEditing()) return;
-        List<ItemStack> list = new ArrayList<>(); list.add(p.getMainHandStack()); list.add(p.getOffHandStack());
+        List<ItemStack> list = new ArrayList<>();
         List<ItemStack> armor = new ArrayList<>(); p.getArmorItems().forEach(armor::add);
-        for (int i = armor.size() - 1; i >= 0; i--) list.add(armor.get(i));
-        if (list.stream().allMatch(ItemStack::isEmpty) && !HudEditor.isEditing()) return;
-        int x = HudLayout.armorX, y = HudLayout.armorY; float s = HudLayout.armorScale;
+        for (int i = armor.size() - 1; i >= 0; i--) if (!armor.get(i).isEmpty()) list.add(armor.get(i));
+        if (list.isEmpty() && !HudEditor.isEditing()) return;
+        int x = HudLayout.armorX, y = HudLayout.armorY; float s = hudScale(mc, HudLayout.armorScale);
         boolean vertical = x < 48 || x > mc.getWindow().getScaledWidth() - 150; int cell = 21;
-        int w = vertical ? 116 : cell * list.size() + 8; int h = vertical ? cell * list.size() + 8 : 38;
+        int w = vertical ? 132 : Math.max(38, cell * list.size() + 8);
+        int h = vertical ? Math.max(29, cell * list.size() + 8) : 38;
         glass(c, x, y, w, h, s); begin(c, x, y, s);
+        if (list.isEmpty()) {
+            c.drawText(mc.textRenderer, HudStyle.text("NO ARMOR"), 30, 9, HudStyle.MUTED, false);
+            end(c);
+            return;
+        }
         for (int i = 0; i < list.size(); i++) {
             ItemStack stack = list.get(i); int ix = vertical ? 6 : 4 + i * cell; int iy = vertical ? 4 + i * cell : 4;
             if (stack.isEmpty()) { if (vertical) c.drawText(mc.textRenderer, HudStyle.text("-"), 10, iy + 5, HudStyle.MUTED, false); continue; }
@@ -86,8 +92,8 @@ public final class ArchiveHud {
 
     private static void hotkeys(DrawContext c, MinecraftClient mc) {
         if (!HudModuleState.hotkeysEnabled && !HudEditor.isEditing()) return;
-        int x = HudLayout.hotkeysX, y = HudLayout.hotkeysY; float s = HudLayout.hotkeysScale;
-        glass(c, x, y, 154, 82, s); begin(c, x, y, s); c.drawText(mc.textRenderer, HudStyle.text("HOTKEYS"), 10, 8, HudStyle.WHITE, false);
+        int x = HudLayout.hotkeysX, y = HudLayout.hotkeysY; float s = hudScale(mc, HudLayout.hotkeysScale);
+        glass(c, x, y, 214, 82, s); begin(c, x, y, s); c.drawText(mc.textRenderer, HudStyle.text("HOTKEYS"), 10, 8, HudStyle.WHITE, false);
         int w = 42, h = 20, g = 4, sx = 10, sy = 28;
         key(c, mc, "W", sx + w + g, sy, mc.options.forwardKey.isPressed(), w, h);
         key(c, mc, "A", sx, sy + h + g, mc.options.leftKey.isPressed(), w, h);
@@ -99,7 +105,7 @@ public final class ArchiveHud {
 
     private static void potions(DrawContext c, MinecraftClient mc, PlayerEntity p) {
         if (!HudModuleState.activePotionsEnabled && !HudEditor.isEditing()) return;
-        List<StatusEffectInstance> effects = new ArrayList<>(p.getStatusEffects()); int x = HudLayout.potionsX, y = HudLayout.potionsY; float s = HudLayout.potionsScale;
+        List<StatusEffectInstance> effects = new ArrayList<>(p.getStatusEffects()); int x = HudLayout.potionsX, y = HudLayout.potionsY; float s = hudScale(mc, HudLayout.potionsScale);
         int w = 180, row = 24, h = 34 + Math.max(1, effects.size()) * row; glass(c, x, y, w, h, s); begin(c, x, y, s); c.fill(0, 0, w, 26, HEADER);
         c.drawText(mc.textRenderer, HudStyle.text("ACTIVE POTIONS"), 10, 8, HudStyle.WHITE, false);
         if (effects.isEmpty()) c.drawText(mc.textRenderer, HudStyle.text("No active effects"), 31, 34, HudStyle.MUTED, false);
@@ -118,7 +124,7 @@ public final class ArchiveHud {
         if (!HudModuleState.staffOnlineEnabled && !HudEditor.isEditing()) return; if (mc.getNetworkHandler() == null) return;
         List<String> names = new ArrayList<>();
         for (PlayerListEntry e : mc.getNetworkHandler().getPlayerList()) { String n = e.getProfile().getName(), lower = n.toLowerCase(Locale.ROOT); for (String word : STAFF_WORDS) if (lower.contains(word)) { names.add(n); break; } if (names.size() >= 6) break; }
-        int x = HudLayout.staffX, y = HudLayout.staffY; float s = HudLayout.staffScale; int w = 180, row = 20, h = 34 + Math.max(1, names.size()) * row;
+        int x = HudLayout.staffX, y = HudLayout.staffY; float s = hudScale(mc, HudLayout.staffScale); int w = 180, row = 20, h = 34 + Math.max(1, names.size()) * row;
         glass(c, x, y, w, h, s); begin(c, x, y, s); c.fill(0, 0, w, 26, HEADER); c.drawText(mc.textRenderer, HudStyle.text("STAFF ONLINE"), 10, 8, HudStyle.WHITE, false);
         if (names.isEmpty()) c.drawText(mc.textRenderer, HudStyle.text("No staff detected"), 20, 30, HudStyle.MUTED, false);
         for (int i = 0; i < names.size(); i++) { int ry = 29 + i * row; c.fill(10, ry + 5, 14, ry + 9, HudStyle.ACCENT); c.drawText(mc.textRenderer, HudStyle.text(trim(names.get(i), 20)), 20, ry + 1, HudStyle.MUTED, false); c.fill(w - 15, ry + 5, w - 10, ry + 10, HudStyle.ACCENT); }
@@ -128,7 +134,7 @@ public final class ArchiveHud {
     private static void target(DrawContext c, MinecraftClient mc, PlayerEntity self) {
         if (!HudModuleState.targetHudEnabled && !HudEditor.isEditing()) return; PlayerEntity target = null;
         if (mc.crosshairTarget instanceof EntityHitResult hit && hit.getEntity() instanceof PlayerEntity p) target = p; else if (HudEditor.isEditing()) target = self;
-        if (target == null) return; int x = HudLayout.targetX, y = HudLayout.targetY; float s = HudLayout.targetScale; int w = 190, h = 48;
+        if (target == null) return; int x = HudLayout.targetX, y = HudLayout.targetY; float s = hudScale(mc, HudLayout.targetScale); int w = 190, h = 48;
         glass(c, x, y, w, h, s); begin(c, x, y, s);
         if (target instanceof AbstractClientPlayerEntity p) { SkinTextures skin = p.getSkinTextures(); c.drawTexture(RenderLayer::getEntityTranslucent, skin.texture(), 8, 8, 8f, 8f, 18, 18, 64, 64); }
         c.drawText(mc.textRenderer, HudStyle.text(trim(target.getName().getString(), 18)), 34, 8, HudStyle.WHITE, false);
@@ -140,7 +146,7 @@ public final class ArchiveHud {
     private static void cooldowns(DrawContext c, MinecraftClient mc, PlayerEntity p) {
         if (!HudModuleState.cooldownsEnabled && !HudEditor.isEditing()) return; ItemCooldownManager manager = p.getItemCooldownManager(); List<ItemStack> stacks = new ArrayList<>(); Set<String> seen = new HashSet<>();
         for (int i = 0; i < p.getInventory().size(); i++) { ItemStack stack = p.getInventory().getStack(i); if (stack.isEmpty() || !manager.isCoolingDown(stack)) continue; if (seen.add(stack.getItem().toString())) stacks.add(stack); if (stacks.size() == 5) break; }
-        if (stacks.isEmpty() && !HudEditor.isEditing()) return; int x = HudLayout.cooldownsX, y = HudLayout.cooldownsY; float s = HudLayout.cooldownsScale; int w = 156, row = 22, h = 34 + Math.max(1, stacks.size()) * row;
+        if (stacks.isEmpty() && !HudEditor.isEditing()) return; int x = HudLayout.cooldownsX, y = HudLayout.cooldownsY; float s = hudScale(mc, HudLayout.cooldownsScale); int w = 156, row = 22, h = 34 + Math.max(1, stacks.size()) * row;
         glass(c, x, y, w, h, s); begin(c, x, y, s); c.fill(0, 0, w, 26, HEADER); c.drawText(mc.textRenderer, HudStyle.text("COOLDOWNS"), 10, 8, HudStyle.WHITE, false);
         if (stacks.isEmpty()) c.drawText(mc.textRenderer, HudStyle.text("No cooldowns"), 10, 34, HudStyle.MUTED, false);
         for (int i = 0; i < stacks.size(); i++) { ItemStack stack = stacks.get(i); int ry = 29 + i * row; c.drawItem(stack, 7, ry - 1); c.drawText(mc.textRenderer, HudStyle.text(trim(stack.getName().getString(), 13)), 30, ry + 1, HudStyle.MUTED, false); int bw = 45; float progress = manager.getCooldownProgress(stack, 0f); c.fill(w - 54, ry + 5, w - 9, ry + 8, 0xFF252A3B); c.fill(w - 54, ry + 5, w - 54 + Math.max(1, Math.round(bw * progress)), ry + 8, HudStyle.ACCENT); }
@@ -148,6 +154,7 @@ public final class ArchiveHud {
     }
 
     private static void key(DrawContext c, MinecraftClient mc, String label, int x, int y, boolean pressed, int w, int h) { c.fill(x, y, x + w, y + h, pressed ? ACTIVE_ROW : ROW); Text text = HudStyle.text(label); c.drawText(mc.textRenderer, text, x + (w - mc.textRenderer.getWidth(text)) / 2, y + 6, pressed ? HudStyle.WHITE : HudStyle.MUTED, false); }
+    private static float hudScale(MinecraftClient mc, float userScale) { return HudLayout.renderScale(mc, userScale); }
     private static void glass(DrawContext c, int x, int y, int w, int h, float s) { ShaderRenderUtil.drawGlassPanel(c, x, y, Math.max(1, Math.round(w * s)), Math.max(1, Math.round(h * s)), RADIUS * s); }
     private static void begin(DrawContext c, int x, int y, float s) { c.getMatrices().push(); c.getMatrices().translate(x, y, 0f); c.getMatrices().scale(s, s, 1f); }
     private static void end(DrawContext c) { c.getMatrices().pop(); }

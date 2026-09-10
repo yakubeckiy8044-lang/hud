@@ -144,7 +144,7 @@ public final class ClickGuiScreen extends Screen {
         context.getMatrices().scale(uiScale, uiScale, 1.0f);
         Text title = titleText(category.title());
         int titleX = (COLUMN_WIDTH - textRenderer.getWidth(title)) / 2;
-        context.drawText(textRenderer, title, titleX, 14, TEXT, false);
+        context.drawText(textRenderer, title, titleX, 14, TEXT, true);
         context.fill(12, HEADER_HEIGHT - 4, COLUMN_WIDTH - 12, HEADER_HEIGHT - 3, 0x382E3854);
 
         int row = 0;
@@ -158,12 +158,12 @@ public final class ClickGuiScreen extends Screen {
             else if (hovered) context.fill(rowX, rowY, rowX + rowWidth, rowY + ROW_HEIGHT - 2, HOVER);
 
             int labelColor = module.enabled() ? TEXT : DISABLED;
-            context.drawText(textRenderer, ui(module.name()), rowX + 7, rowY + 6, labelColor, false);
+            context.drawText(textRenderer, ui(module.name()), rowX + 7, rowY + 6, labelColor, true);
             if (!module.marker().isEmpty()) {
                 Text marker = ui(module.marker());
                 int markerX = rowX + rowWidth - textRenderer.getWidth(marker) - 7;
                 context.drawText(textRenderer, marker, markerX, rowY + 6,
-                        module.enabled() ? 0xFFE3B9FF : MUTED, false);
+                        module.enabled() ? 0xFFE3B9FF : MUTED, true);
             }
             context.fill(rowX + 5, rowY + ROW_HEIGHT - 3, rowX + rowWidth - 5, rowY + ROW_HEIGHT - 2, 0x242A2940);
             row++;
@@ -179,7 +179,7 @@ public final class ClickGuiScreen extends Screen {
         context.getMatrices().scale(uiScale, uiScale, 1.0f);
         context.drawBorder(10, 7, 8, 8, 0xFFB4A9C5);
         context.fill(17, 15, 21, 17, 0xFFB4A9C5);
-        context.drawText(textRenderer, ui("Поиск"), 30, 8, 0xFFAAA2B8, false);
+        context.drawText(textRenderer, ui("Поиск"), 30, 8, 0xFFAAA2B8, true);
         context.getMatrices().pop();
     }
 

@@ -4,10 +4,10 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 public final class FontManager {
-    // Use Minecraft's own atlas for stable Latin/Cyrillic glyphs. A custom
-    // TTF provider can fall back to tofu glyphs on clients where it fails to
-    // load, while the bundled uniform provider is always available.
-    public static final Identifier UI_FONT = Identifier.of("minecraft", "uniform");
+    // The default atlas is wider and easier to read at compact GUI scales
+    // than the monospaced uniform provider. It also has stable Latin and
+    // Cyrillic glyphs on every vanilla 1.21.4 client.
+    public static final Identifier UI_FONT = Identifier.of("minecraft", "default");
 
     private FontManager() {
     }
